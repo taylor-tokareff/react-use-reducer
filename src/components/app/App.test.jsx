@@ -5,8 +5,8 @@ import App from './App';
 describe('App component', () => {
   it('renders App', () => {
     render(<App />);
-    const display = screen.getByTestId('display');
-    const colorInput = screen.getByTestId('color-input');
+    const display = screen.getByRole('colordiv');
+    const colorInput = screen.getByTestId('input');
     const undoButton = screen.getByText('undo');
     const redoButton = screen.getByText('redo');
 

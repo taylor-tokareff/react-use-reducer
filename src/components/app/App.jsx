@@ -1,51 +1,65 @@
-import React, { useState } from 'react';
+/* eslint-disable max-len */
+import React, { useReducer } from 'react';
 
-const useRecord = (init) => {
-  const [before, setBefore] = useState([]);
-  const [current, setCurrent] = useState(init);
-  const [after, setAfter] = useState([]);
+const initialState = {
+  before: [],
+  current: '#ff0000',
+  after: []
+};
 
-  const undo = () => {
-    setAfter((after) => [current, ...after]);
-    setCurrent(before[before.length - 1]);
-    setBefore((before) => before.slice(0, -1));
-  };
+const UNDO = 'UNDO';
+const REDO = 'REDO';
+const RECORD = 'RECORD';
 
-  const redo = () => {
-    setBefore((before) => [...before, current]);
-    setCurrent(after[0]);
-    setAfter((after) => after.slice(1));
-  };
+const undo = () => ({ type: UNDO });
+const redo = () => ({ type: REDO });
+const record = (color) => ({
+  type: RECORD,
+  payload: color
+});
 
-  const record = (val) => {
-    setBefore((before) => [...before, current]);
-    setCurrent(val);
-  };
-
-  return {
-    undo,
-    record,
-    redo,
-    current,
-  };
+const reducer = (state, action) => {
+  switch (action.type) {
+    case UNDO:
+      return {
+        ...state,
+        current: state.before[state.before.length - 1],
+        after: [state.current, ...state.after],
+        before: state.before.slice(0, -1)
+      };
+    case REDO:
+      return {
+        ...state,
+        current: state.after[0],
+        after: state.after.slice(1),
+        before: [...state.before, state.current]
+      };
+    case RECORD:
+      return {
+        ...state,
+        current: action.payload,
+        before: [...state.before, state.current]
+      };
+  }
 };
 
 function App() {
-  const { current, undo, redo, record } = useRecord('#FF0000');
+
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   return (
     <>
-      <button onClick={undo}>undo</button>
-      <button onClick={redo}>redo</button>
+      <button onClick={() => dispatch(undo())} data-testid="undo" >undo</button>
+      <button onClick={() => dispatch(redo())} data-testid="redo">redo</button>
       <input
-        data-testid="color-input"
         type="color"
-        value={current}
-        onChange={({ target }) => record(target.value)}
+        data-testid="input"
+        value={state.current}
+        onChange={({ target }) => dispatch(record(target.value))}
       />
       <div
-        data-testid="display"
-        style={{ backgroundColor: current, width: '10rem', height: '10rem' }}
+        role="colordiv"
+        style={{ backgroundColor: state.current, width: '10rem', height: '10rem' }}
       ></div>
     </>
   );
